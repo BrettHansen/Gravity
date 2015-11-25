@@ -10,7 +10,7 @@ var tick = 0;
 var lastTime = 0;
 var deltaTime = 0;
 
-var G = 1;
+var G = .22;
 var epsilon = .00001;
 
 var eyePoint;
@@ -29,7 +29,7 @@ window.onload = function init() {
     if ( !gl ) { alert( "WebGL isn't available" ); }
 
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(0.6, 0.7, 1.0, 1.0);
+    gl.clearColor(0.1, 0.1, 0.1, 1.0);
 
     gl.enable(gl.DEPTH_TEST);
 
@@ -72,15 +72,21 @@ window.onload = function init() {
 
 //BRETT: Create shapes out of meshes and setup the hierarchy
 function createSceneObjects() {
-    objects.push(new object(sphereMesh, yellow, vec3(0, 0, 0), vec3(.5, .5, .5), vec3(0, 0, 0), 100.0));
+    objects.push(new object(sphereMesh, yellow, vec3(0, 0, 0), .5, vec3(0, 0, 0), 100.0));
+    // objects.push(new object(sphereMesh, yellow, vec3(1, 2, 1), .5, vec3(0, 0, 0), 100.0));
 
-    for(var i = 0; i < 20; i++) {
+    var total = 200;
+    var radius = 1;
+    var speed = .5;
+    for(var i = 0; i < total; i++) {
+        // var angle = i / total * 2 * Math.PI;
+        var angle = randomRange(0, 1) * 2 * Math.PI;
         objects.push(new object(sphereMesh, 
-                                vec3(random(), random(), random()),
-                                vec3(random(), random(), random()),
-                                vec3(.1, .1, .1),
-                                vec3(random(), random(), random()),
-                                1.0));
+                                vec3(randomRange(0, 1), randomRange(0, 1), randomRange(0, 1)),
+                                vec3(randomRange(-.1, .2), radius * Math.cos(angle) + randomRange(-.1, .2), radius * Math.sin(angle) + randomRange(-.1, .2)),
+                                .02,
+                                vec3(0, speed * -Math.sin(angle), speed * Math.cos(angle)),
+                                .001));
     }
 }
 
@@ -91,6 +97,7 @@ function render() {
     lastTime += deltaTime * 1000;
 
     moveTime(deltaTime);
+    collisionTest();
 
     moveCamera();
     lookAtMatrix = lookAt(eyePoint, atPoint, upVector);
@@ -121,6 +128,26 @@ function moveTime(deltaTime) {
     }
 }
 
+function collisionTest() {
+    for(var i = 0; i < objects.length - 1; i++) {
+        for(var j = i + 1; j < objects.length; j++) {
+            if(Math.sqrt(squaredDistance(objects[i].position, objects[j].position)) < objects[i].radius + objects[j].radius) {
+                var new_mass = objects[i].mass + objects[j].mass;
+                var p1 = objects[i].mass / new_mass;
+                var p2 = objects[j].mass / new_mass;
+                objects[i].mass = new_mass;
+                objects[i].radius = Math.pow(Math.pow(objects[i].radius, 3) + Math.pow(objects[j].radius, 3), 1 / 3);
+                objects[i].color = add(scale(p1, objects[i].color), scale(p2, objects[j].color));
+                objects[i].velocity = add(scale(p1, objects[i].velocity), scale(p2, objects[j].velocity));
+                objects[i].position = add(scale(p1, objects[i].position), scale(p2, objects[j].position));
+                objects[i].recalculateModelView();
+                objects.splice(j, 1);
+                j--;
+            }
+        }
+    }
+}
+
 function gravitationalAcceleration(object1, object2) {
     var dis = Math.sqrt(squaredDistance(object1.position, object2.position));
     if(dis < epsilon)
@@ -130,39 +157,59 @@ function gravitationalAcceleration(object1, object2) {
 }
 
 function random() {
-    return 2 * (Math.random() - .5);
+    return randomRange(-1, 2);
+}
+
+function randomRange(min, range) {
+    return range * Math.random() + min;
 }
 
 function moveCamera() {
     //BRETT: Moves camera based on keys pressed down
+    // UP
     if(pressedKeys[38]) {
-        var dir = scale(-.1, normalize(subtract(eyePoint, atPoint)));
-        eyePoint = add(eyePoint, dir);
-        atPoint = add(atPoint, dir);
+        var dir = normalize(subtract(atPoint, eyePoint));
+        dir = mult(rotate3D(0, 0, -40 * deltaTime), translate(dir));
+        atPoint = add(getPositionFromTranslate(dir), eyePoint);
     }
+    // DOWN
     if(pressedKeys[40]) {
-        var dir = scale(.1, normalize(subtract(eyePoint, atPoint)));
-        eyePoint = add(eyePoint, dir);
-        atPoint = add(atPoint, dir);
+        var dir = normalize(subtract(atPoint, eyePoint));
+        dir = mult(rotate3D(0, 0, 40 * deltaTime), translate(dir));
+        atPoint = add(getPositionFromTranslate(dir), eyePoint);
     }
+    // LEFT
     if(pressedKeys[37]) {
         var dir = normalize(subtract(atPoint, eyePoint));
         dir = mult(rotate3D(0, 40 * deltaTime, 0), translate(dir));
         atPoint = add(getPositionFromTranslate(dir), eyePoint);
     }
+    // RIGHT
     if(pressedKeys[39]) {
         var dir = normalize(subtract(atPoint, eyePoint));
         dir = mult(rotate3D(0, -40 * deltaTime, 0), translate(dir));
         atPoint = add(getPositionFromTranslate(dir), eyePoint);
     }
-    if(pressedKeys[32]) {
-        atPoint = add(atPoint, scale(5 * deltaTime, normalize(upVector)));
-        eyePoint = add(eyePoint, scale(5 * deltaTime, normalize(upVector)));
+    // W
+    if(pressedKeys[87]) {
+        var dir = scale(-.1, normalize(subtract(eyePoint, atPoint)));
+        eyePoint = add(eyePoint, dir);
+        atPoint = add(atPoint, dir);
     }
-    if(pressedKeys[16]) {
-        atPoint = add(atPoint, scale(-5 * deltaTime, normalize(upVector)));
-        eyePoint = add(eyePoint, scale(-5 * deltaTime, normalize(upVector)));
+    // S
+    if(pressedKeys[83]) {
+        var dir = scale(.1, normalize(subtract(eyePoint, atPoint)));
+        eyePoint = add(eyePoint, dir);
+        atPoint = add(atPoint, dir);
     }
+    // if(pressedKeys[32]) {
+    //     atPoint = add(atPoint, scale(5 * deltaTime, normalize(upVector)));
+    //     eyePoint = add(eyePoint, scale(5 * deltaTime, normalize(upVector)));
+    // }
+    // if(pressedKeys[16]) {
+    //     atPoint = add(atPoint, scale(-5 * deltaTime, normalize(upVector)));
+    //     eyePoint = add(eyePoint, scale(-5 * deltaTime, normalize(upVector)));
+    // }
 }
 
 function mod(n, m) {
@@ -177,6 +224,10 @@ function abs(n) {
 
 function toDegrees(rad) {
     return rad / Math.PI * 180;
+}
+
+function rotate3D(x, y, z) {
+    return mult(mult(rotate(x, [1, 0, 0]), rotate(y, [0, 1, 0])), rotate(z, [0, 0, 1]));
 }
 
 function getPositionFromTranslate(u) {

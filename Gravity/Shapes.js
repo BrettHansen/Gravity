@@ -3,13 +3,15 @@ function object(mesh, color, position, scale, velocity, mass) {
     this.color = color;
     this.position = position;
     this.translate = translate(position);
-    this.scale = scalem(scale);
+    this.radius = scale;
+    this.scale = scalem(scale, scale, scale);
     this.modelView = createModelView(this.translate, this.scale);
     this.mass = mass;
     this.velocity = velocity;
 
     this.recalculateModelView = function() {
         this.translate = translate(this.position);
+        this.scale = scalem(this.radius, this.radius, this.radius);
         this.modelView = createModelView(this.translate, this.scale);
     };
     this.render = function(gl, projection, lookAtMatrix) {
