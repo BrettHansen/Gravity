@@ -88,17 +88,6 @@ function createSceneObjects() {
                                 vec3(0, speed * -Math.sin(angle), speed * Math.cos(angle)),
                                 .01));
     }
-    // for(var i = 0; i < 300; i++) {
-    //     var radius = Math.sqrt(randomRange(0, 2));
-    //     var angle = randomRange(0, 1) * 2 * Math.PI;
-    //     var speed = .2 * radius;
-    //     objects.push(new object(sphereMesh,
-    //                             blue,
-    //                             vec3(0, radius * Math.cos(angle), radius * Math.sin(angle)),
-    //                             .01,
-    //                             vec3(0, speed * -Math.sin(angle), speed * Math.cos(angle)),
-    //                             .02));
-    // }
 }
 
 function createSceneObjects2() {
@@ -112,7 +101,7 @@ function createSceneObjects2() {
                                 vec3(0, radius * Math.cos(angle), radius * Math.sin(angle)),
                                 .01,
                                 vec3(0, speed * -Math.sin(angle), speed * Math.cos(angle)),
-                                .02));
+                                .1));
     }
 }
 
@@ -234,6 +223,12 @@ function moveCamera() {
         var dir = scale(.1, normalize(subtract(eyePoint, atPoint)));
         eyePoint = add(eyePoint, dir);
         atPoint = add(atPoint, dir);
+    }
+    if(pressedKeys[65]) {
+        createSceneObjects();
+    }
+    if(pressedKeys[66]) {
+        createSceneObjects2();
     }
     // if(pressedKeys[32]) {
     //     atPoint = add(atPoint, scale(5 * deltaTime, normalize(upVector)));
