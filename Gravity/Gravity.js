@@ -55,7 +55,7 @@ window.onload = function init() {
     deltaR = 60;
 
     //BRETT: Creates the meshes for the shapes
-    sphereMesh = createSphere(10);
+    sphereMesh = createSphere(20);
 
     //BRETT: Initial setup for timing
     lastTime = Date.now();
@@ -72,9 +72,10 @@ window.onload = function init() {
 
 //BRETT: Create shapes out of meshes and setup the hierarchy
 function createSceneObjects() {
+    objects = [];
     objects.push(new object(sphereMesh, yellow, vec3(0, 0, 0), .5, vec3(0, 0, 0), 100.0));
 
-    var total = 200;
+    var total = 20;
     var radius = 1;
     var speed = .5;
     for(var i = 0; i < total; i++) {
@@ -83,9 +84,9 @@ function createSceneObjects() {
         objects.push(new object(sphereMesh, 
                                 vec3(randomRange(0, 1), randomRange(0, 1), randomRange(0, 1)),
                                 vec3(randomRange(-.1, .2), radius * Math.cos(angle) + randomRange(-.1, .2), radius * Math.sin(angle) + randomRange(-.1, .2)),
-                                .02,
+                                .04,
                                 vec3(0, speed * -Math.sin(angle), speed * Math.cos(angle)),
-                                .001));
+                                .01));
     }
     // for(var i = 0; i < 300; i++) {
     //     var radius = Math.sqrt(randomRange(0, 2));
@@ -100,6 +101,21 @@ function createSceneObjects() {
     // }
 }
 
+function createSceneObjects2() {
+    objects = [];
+    for(var i = 0; i < 300; i++) {
+        var radius = Math.sqrt(randomRange(0, 2));
+        var angle = randomRange(0, 1) * 2 * Math.PI;
+        var speed = .2 * radius;
+        objects.push(new object(sphereMesh,
+                                blue,
+                                vec3(0, radius * Math.cos(angle), radius * Math.sin(angle)),
+                                .01,
+                                vec3(0, speed * -Math.sin(angle), speed * Math.cos(angle)),
+                                .02));
+    }
+}
+
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT);
     //BRETT: Find elapsed time
@@ -107,7 +123,7 @@ function render() {
     lastTime += deltaTime * 1000;
 
     moveTime(deltaTime);
-    collisionTest();
+    // collisionTest();
 
     moveCamera();
     lookAtMatrix = lookAt(eyePoint, atPoint, upVector);
