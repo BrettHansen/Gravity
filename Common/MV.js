@@ -934,3 +934,12 @@ function normalMatrix(m, flag)
     }
 
 }
+
+// Added
+function magnitudeSquared(u)
+{
+    var m = 0;
+    for(var i = 0; i < u.length; i++)
+        m += u[i] * u[i]
+    return m;
+}

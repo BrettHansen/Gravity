@@ -10,7 +10,7 @@ var tick = 0;
 var lastTime = 0;
 var deltaTime = 0;
 
-var G = .75;
+var G = .22;
 var epsilon = .00001;
 
 var eyePoint;
@@ -72,32 +72,32 @@ window.onload = function init() {
 
 //BRETT: Create shapes out of meshes and setup the hierarchy
 function createSceneObjects() {
-    // objects.push(new object(sphereMesh, yellow, vec3(0, 0, 0), .5, vec3(0, 0, 0), 100.0));
+    objects.push(new object(sphereMesh, yellow, vec3(0, 0, 0), .5, vec3(0, 0, 0), 100.0));
 
-    // var total = 200;
-    // var radius = 1;
-    // var speed = .5;
-    // for(var i = 0; i < total; i++) {
-    //     // var angle = i / total * 2 * Math.PI;
-    //     var angle = randomRange(0, 1) * 2 * Math.PI;
-    //     objects.push(new object(sphereMesh, 
-    //                             vec3(randomRange(0, 1), randomRange(0, 1), randomRange(0, 1)),
-    //                             vec3(randomRange(-.1, .2), radius * Math.cos(angle) + randomRange(-.1, .2), radius * Math.sin(angle) + randomRange(-.1, .2)),
-    //                             .02,
-    //                             vec3(0, speed * -Math.sin(angle), speed * Math.cos(angle)),
-    //                             .001));
-    // }
-    for(var i = 0; i < 300; i++) {
-        var radius = Math.sqrt(randomRange(0, 2));
+    var total = 200;
+    var radius = 1;
+    var speed = .5;
+    for(var i = 0; i < total; i++) {
+        // var angle = i / total * 2 * Math.PI;
         var angle = randomRange(0, 1) * 2 * Math.PI;
-        var speed = .2 * radius;
-        objects.push(new object(sphereMesh,
-                                blue,
-                                vec3(0, radius * Math.cos(angle), radius * Math.sin(angle)),
-                                .01,
+        objects.push(new object(sphereMesh, 
+                                vec3(randomRange(0, 1), randomRange(0, 1), randomRange(0, 1)),
+                                vec3(randomRange(-.1, .2), radius * Math.cos(angle) + randomRange(-.1, .2), radius * Math.sin(angle) + randomRange(-.1, .2)),
+                                .02,
                                 vec3(0, speed * -Math.sin(angle), speed * Math.cos(angle)),
-                                .02));
+                                .001));
     }
+    // for(var i = 0; i < 300; i++) {
+    //     var radius = Math.sqrt(randomRange(0, 2));
+    //     var angle = randomRange(0, 1) * 2 * Math.PI;
+    //     var speed = .2 * radius;
+    //     objects.push(new object(sphereMesh,
+    //                             blue,
+    //                             vec3(0, radius * Math.cos(angle), radius * Math.sin(angle)),
+    //                             .01,
+    //                             vec3(0, speed * -Math.sin(angle), speed * Math.cos(angle)),
+    //                             .02));
+    // }
 }
 
 function render() {
@@ -107,7 +107,7 @@ function render() {
     lastTime += deltaTime * 1000;
 
     moveTime(deltaTime);
-    // collisionTest();
+    collisionTest();
 
     moveCamera();
     lookAtMatrix = lookAt(eyePoint, atPoint, upVector);
@@ -124,15 +124,22 @@ function render() {
 function moveTime(deltaTime) {
     var t_squared = deltaTime * deltaTime;
     // Calculate and apply acceleration
+
+    // var max_intensity = 0;
     for(var i = 0; i < objects.length; i++) {
         var acc = vec3(0, 0, 0);
         for(var j = 0; j < objects.length; j++) {
             acc = add(acc, gravitationalAcceleration(objects[i], objects[j]));
         }
         objects[i].velocity = add(objects[i].velocity, scale(.5 * t_squared, acc));
+        // var intensity = magnitudeSquared(acc);
+        // max_intensity = max(max_intensity, intensity);
+        // objects[i].color = vec3(intensity, 0, 0);
     }
     // Move by velocity
     for(var i = 0; i < objects.length; i++) {
+        // var intensity = objects[i].color[0] / max_intensity;
+        // objects[i].color = vec3(intensity, 1 - intensity, 0);
         objects[i].position = add(objects[i].position, scale(deltaTime, objects[i].velocity));
         objects[i].recalculateModelView();
     }
@@ -230,6 +237,12 @@ function abs(n) {
     if(n < 0)
         return -n;
     return n;
+}
+
+function max(a, b) {
+    if(a > b)
+        return a;
+    return b;
 }
 
 function toDegrees(rad) {
